@@ -1,4 +1,4 @@
-package vytautas.com.exception;
+package vytautas.com.exceptions;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;

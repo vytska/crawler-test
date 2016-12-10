@@ -1,4 +1,4 @@
-package vytautas.com.dto;
+package vytautas.com.dtos;
 
 public class FinishJobRequest extends UrlHolder {
 

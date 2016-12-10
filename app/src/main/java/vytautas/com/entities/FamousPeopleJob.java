@@ -1,6 +1,6 @@
-package vytautas.com;
+package vytautas.com.entities;
 
-import vytautas.com.dto.FamousPeopleJobDto;
+import vytautas.com.dtos.FamousPeopleJobDto;
 
 import java.util.ArrayList;
 import java.util.List;

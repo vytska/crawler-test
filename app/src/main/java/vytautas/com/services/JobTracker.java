@@ -1,22 +1,25 @@
-package vytautas.com;
+package vytautas.com.services;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import vytautas.com.dto.FamousPeopleJobDto;
-import vytautas.com.exception.JobAlreadyExistsWarning;
-import vytautas.com.exception.JobAlreadyFinishedException;
-import vytautas.com.exception.JobNotFoundException;
-import vytautas.com.exception.UrlRequiredException;
-import vytautas.com.dto.FinishJobRequest;
-import vytautas.com.dto.UpdateListRequest;
-import vytautas.com.dto.UrlHolder;
+import vytautas.com.entities.FamousPeopleJob;
+import vytautas.com.dtos.FamousPeopleJobDto;
+import vytautas.com.dtos.FinishJobRequest;
+import vytautas.com.dtos.UpdateListRequest;
+import vytautas.com.dtos.UrlHolder;
+import vytautas.com.exceptions.JobAlreadyExistsWarning;
+import vytautas.com.exceptions.JobAlreadyFinishedException;
+import vytautas.com.exceptions.JobNotFoundException;
+import vytautas.com.exceptions.UrlRequiredException;
 
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Service(value = "jobTracker")
 public class JobTracker {
 
     private static Logger logger = LoggerFactory.getLogger(JobTracker.class);
@@ -28,18 +31,18 @@ public class JobTracker {
         validateUrl(url);
         FamousPeopleJob existingJob = jobs.get(url);
         if (existingJob != null) {
-            logger.warn("JobTracker.addJob. Job already exists for URL: %s, request rejected", url);
+            logger.warn("JobTracker.addJob. Job already exists for URL: {}, request rejected", url);
             throw new JobAlreadyExistsWarning();
         }
 
-        logger.info("JobTracker.addJob. Adding job for URL: %s", url);
+        logger.info("JobTracker.addJob. Adding job for URL: {}", url);
         FamousPeopleJob famousPeopleJob = new FamousPeopleJob(url);
         jobs.put(url, famousPeopleJob);
     }
 
     public void updateJob(UpdateListRequest updateListRequest) {
         FamousPeopleJob job = getJobAndValidate(updateListRequest);
-        logger.warn("JobTracker.updateJob. Adding famous people for job with URL: %s", updateListRequest.getUrl());
+        logger.warn("JobTracker.updateJob. Adding famous people for job with URL: {}", updateListRequest.getUrl());
         job.addFamousPeople(updateListRequest.getList());
     }
 
@@ -49,12 +52,12 @@ public class JobTracker {
         FamousPeopleJob existingJob = jobs.get(urlHolder.getUrl());
 
         if (existingJob == null) {
-            logger.warn("JobTracker.getJobAndValidate. Job for URL: %s was not found, request rejected", urlHolder.getUrl());
+            logger.warn("JobTracker.getJobAndValidate. Job for URL: {} was not found, request rejected", urlHolder.getUrl());
             throw new JobNotFoundException();
         }
 
         if (existingJob.isFinished()) {
-            logger.warn("JobTracker.getJobAndValidate. Job for URL: %s is already finished, request rejected", urlHolder.getUrl());
+            logger.warn("JobTracker.getJobAndValidate. Job for URL: {} is already finished, request rejected", urlHolder.getUrl());
             throw new JobAlreadyFinishedException();
         }
 
@@ -70,7 +73,7 @@ public class JobTracker {
 
     public void finishJob(FinishJobRequest finishJobRequest) {
         FamousPeopleJob existingJob = getJobAndValidate(finishJobRequest);
-        logger.info("JobTracker.finishJob. Finishing job for URL: %s", finishJobRequest.getUrl());
+        logger.info("JobTracker.finishJob. Finishing job for URL: {}", finishJobRequest.getUrl());
         existingJob.setRepositoryKey(finishJobRequest.getRepositoryKey());
     }
 
@@ -78,7 +81,7 @@ public class JobTracker {
         if(state.equalsIgnoreCase("unfinished")) {
             return getUnfinishedJobs();
         } else {
-            logger.warn("JobTracker.searchByState. Invalid search state param %s, returning empty set", state);
+            logger.warn("JobTracker.searchByState. Invalid search state param {}, returning empty set", state);
             return Collections.emptySet();
         }
     }
@@ -96,7 +99,7 @@ public class JobTracker {
     }
 
     public Set<FamousPeopleJobDto> searchByUrl(String url) {
-        logger.info("JobTracker.searchByUrl. URL: %s", url);
+        logger.info("JobTracker.searchByUrl. URL: {}", url);
         FamousPeopleJob famousPeopleJob = jobs.get(url);
         Set<FamousPeopleJobDto> jobs = new HashSet<>();
 

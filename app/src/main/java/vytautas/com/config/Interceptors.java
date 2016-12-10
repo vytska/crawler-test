@@ -1,4 +1,4 @@
-package vytautas.com;
+package vytautas.com.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,4 +15,5 @@ public class Interceptors {
         crlf.setIncludePayload(true);
         return crlf;
     }
+
 }

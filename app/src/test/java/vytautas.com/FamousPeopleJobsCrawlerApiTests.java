@@ -8,10 +8,11 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.boot.SpringApplication;
 import org.springframework.http.HttpStatus;
-import vytautas.com.dto.CreateJobRequest;
-import vytautas.com.dto.FamousPeopleJobDto;
-import vytautas.com.dto.FinishJobRequest;
-import vytautas.com.dto.UpdateListRequest;
+import vytautas.com.dtos.CreateJobRequest;
+import vytautas.com.dtos.FamousPeopleJobDto;
+import vytautas.com.dtos.FinishJobRequest;
+import vytautas.com.dtos.UpdateListRequest;
+import vytautas.com.services.JobTracker;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -42,7 +43,7 @@ public class FamousPeopleJobsCrawlerApiTests {
 
     @BeforeClass
     public static void runApp() {
-        SpringApplication.run(FamousPeopleJobController.class);
+        SpringApplication.run(AppRunner.class);
     }
 
     @After
