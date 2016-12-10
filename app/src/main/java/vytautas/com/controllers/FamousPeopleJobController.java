@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.logging.LogLevel;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import vytautas.com.dtos.CreateJobRequest;
@@ -39,7 +40,7 @@ public class FamousPeopleJobController {
             @ApiResponse(code = 422, message = "Job with this URL is already done"),
             @ApiResponse(code = 400, message = "URL was not present in the request")})
     @RequestMapping(path = "/famous-people-job", method = RequestMethod.POST)
-    @ExecutionMetric("famous-people-job-create")
+    @ExecutionMetric(value = "famous-people-job-create", loglevel = LogLevel.INFO)
     public void crateJob(@RequestBody CreateJobRequest createJob) {
         jobTracker.addJob(createJob.getUrl());
     }
@@ -54,7 +55,7 @@ public class FamousPeopleJobController {
             @ApiResponse(code = 422, message = "Job with this URL is already done"),
             @ApiResponse(code = 400, message = "URL was not present in the request") })
     @RequestMapping(path = "/famous-people-job/list", method = RequestMethod.PUT)
-    @ExecutionMetric("famous-people-job-update")
+    @ExecutionMetric(value = "famous-people-job-update", loglevel = LogLevel.INFO)
     public void updateJobList(@RequestBody UpdateListRequest updateList) {
         jobTracker.updateJob(updateList);
     }
@@ -68,8 +69,8 @@ public class FamousPeopleJobController {
             @ApiResponse(code = 404, message = "Job with this URL was not found"),
             @ApiResponse(code = 422, message = "Job with this URL is already done"),
             @ApiResponse(code = 400, message = "URL was not present in the request") })
-    @ExecutionMetric("famous-people-job-finish")
     @RequestMapping(path = "/famous-people-job", method = RequestMethod.PATCH)
+    @ExecutionMetric(value="famous-people-job-finish", loglevel = LogLevel.INFO)
     public void finishJob(@RequestBody FinishJobRequest finishJobRequestReq) {
         jobTracker.finishJob(finishJobRequestReq);
     }
@@ -83,7 +84,7 @@ public class FamousPeopleJobController {
             @ApiResponse(code = 200, message = "Request successful", response = FamousPeopleJobDto[].class),
             @ApiResponse(code = 400, message = "URL was not present in the request") })
     @RequestMapping(path = "/famous-people-job", method = RequestMethod.GET, produces = "application/json")
-    @ExecutionMetric("famous-people-job-search")
+    @ExecutionMetric(value = "famous-people-job-search", loglevel = LogLevel.INFO)
     public Set<FamousPeopleJobDto> searchJobs(@RequestParam(value = "url", required = false) String url, @RequestParam(value = "state", required = false) String state) {
         if (!StringUtils.isEmpty(url)) {
             return jobTracker.searchByUrl(url);
