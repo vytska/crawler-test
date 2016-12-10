@@ -1,0 +1,14 @@
+version: '2'
+services:
+
+  app:
+      build:
+          context: .
+          dockerfile: app/Dockerfile
+      volumes:
+          - "./app/src:/app/src"
+          - "./app/pom.xml:/app/pom.xml"
+      ports:
+          - "8761:8080"
+
+
