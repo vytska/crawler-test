@@ -32,7 +32,7 @@ public class FamousPeopleJobController {
     @ApiOperation(
             nickname = "crateJob",
             value = "Creates new famous people job",
-            notes = "This call is used to start a job. URL is used as ID, <b>it must be encoded<b/>.<br/>" +
+            notes = "This call is used to start a job.<b> URL is used as ID, it must be encoded</b>.<br/>" +
                     "Only one job per URL is permitted.")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Job successfully added"),
