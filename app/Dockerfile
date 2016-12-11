@@ -4,9 +4,7 @@ EXPOSE 8080
 
 WORKDIR /app
 
-CMD mvn clean install
-
-CMD mvn spring-boot:run
+CMD mvn clean install && mvn spring-boot:run
 
 
 

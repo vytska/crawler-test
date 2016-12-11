@@ -9,6 +9,6 @@ services:
           - "./app/src:/app/src"
           - "./app/pom.xml:/app/pom.xml"
       ports:
-          - "8761:8080"
+          - "8755:8080"
 
 
