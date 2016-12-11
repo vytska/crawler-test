@@ -7,9 +7,10 @@ public class UpdateListRequest extends UrlHolder {
 
     private List<String> list = new ArrayList<>();
 
-    public UpdateListRequest(){}
+    public UpdateListRequest() {
+    }
 
-    public UpdateListRequest(String url){
+    public UpdateListRequest(String url) {
         setUrl(url);
     }
 

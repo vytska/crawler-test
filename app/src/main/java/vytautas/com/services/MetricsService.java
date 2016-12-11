@@ -17,9 +17,8 @@ public class MetricsService {
     @Autowired
     private HealthEndpoint healthEndpoint;
 
-
-    public Map<String, Object> getMetrics(){
-        Map<String, Object> metricsMap =  metricsEndpoint.invoke();
+    public Map<String, Object> getMetrics() {
+        Map<String, Object> metricsMap = metricsEndpoint.invoke();
 
         Map<String, Object> filteredMetrics = metricsMap.entrySet().stream()
                 .filter(entry -> entry.getKey().startsWith("gauge.famous-people-job") || entry.getKey().startsWith("counter.famous-people-job"))

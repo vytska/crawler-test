@@ -25,7 +25,7 @@ public class FamousPeopleJob {
         return repositoryKey != null;
     }
 
-    public FamousPeopleJobDto toDto(){
+    public FamousPeopleJobDto toDto() {
         FamousPeopleJobDto dto = new FamousPeopleJobDto();
         dto.setUrl(this.url);
         dto.setRepositoryKey(this.repositoryKey);
@@ -48,7 +48,6 @@ public class FamousPeopleJob {
     public int hashCode() {
         return url != null ? url.hashCode() : 0;
     }
-
 
     public String getUrl() {
         return url;

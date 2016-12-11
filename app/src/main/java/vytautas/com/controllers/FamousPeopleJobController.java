@@ -19,15 +19,12 @@ import vytautas.com.services.JobTracker;
 import java.util.Set;
 
 
-
 @RestController
 @Api(description = "Famous people job management")
 public class FamousPeopleJobController {
 
-
     @Autowired
     private JobTracker jobTracker;
-
 
     @ApiOperation(
             nickname = "crateJob",
@@ -69,9 +66,9 @@ public class FamousPeopleJobController {
             @ApiResponse(code = 200, message = "Job successfully finished"),
             @ApiResponse(code = 404, message = "Job with this URL was not found"),
             @ApiResponse(code = 422, message = "Job with this URL is already done"),
-            @ApiResponse(code = 400, message = "URL was not present in the request") })
+            @ApiResponse(code = 400, message = "URL was not present in the request")})
     @RequestMapping(path = "/famous-people-job", method = RequestMethod.PATCH)
-    @ExecutionMetric(value="famous-people-job-finish", loglevel = LogLevel.INFO)
+    @ExecutionMetric(value = "famous-people-job-finish", loglevel = LogLevel.INFO)
     public void finishJob(@RequestBody FinishJobRequest finishJobRequestReq) {
         jobTracker.finishJob(finishJobRequestReq);
     }
@@ -83,7 +80,7 @@ public class FamousPeopleJobController {
                     "<b>If one of these parameters is not present error will be returned!</b>")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Request successful", response = FamousPeopleJobDto[].class),
-            @ApiResponse(code = 400, message = "URL was not present in the request") })
+            @ApiResponse(code = 400, message = "URL was not present in the request")})
     @RequestMapping(path = "/famous-people-job", method = RequestMethod.GET, produces = "application/json")
     @ExecutionMetric(value = "famous-people-job-search", loglevel = LogLevel.INFO)
     public Set<FamousPeopleJobDto> searchJobs(@RequestParam(value = "url", required = false) String url, @RequestParam(value = "state", required = false) String state) {

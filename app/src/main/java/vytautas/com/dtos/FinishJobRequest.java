@@ -4,7 +4,8 @@ public class FinishJobRequest extends UrlHolder {
 
     private String repositoryKey;
 
-    public FinishJobRequest(){}
+    public FinishJobRequest() {
+    }
 
     public FinishJobRequest(String url, String repositoryKey) {
         super(url);

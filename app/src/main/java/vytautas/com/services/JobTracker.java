@@ -23,7 +23,6 @@ public class JobTracker {
 
     private static ConcurrentHashMap<String, FamousPeopleJob> jobs = new ConcurrentHashMap<>();
 
-
     public void addJob(String url) {
         validateUrl(url);
         FamousPeopleJob existingJob = jobs.get(url);
@@ -39,7 +38,7 @@ public class JobTracker {
 
     public void updateJob(UpdateListRequest updateListRequest) {
         FamousPeopleJob job = getJobAndValidate(updateListRequest);
-        if(updateListRequest.getList().isEmpty()) {
+        if (updateListRequest.getList().isEmpty()) {
             logger.warn("JobTracker.updateJob. Empty famous people list came for URL: {}, request rejected", job.getUrl());
             throw new ListRequiredException();
         }
@@ -80,7 +79,7 @@ public class JobTracker {
     }
 
     public Set<FamousPeopleJobDto> searchByState(String state) {
-        if(state.equalsIgnoreCase("unfinished")) {
+        if (state.equalsIgnoreCase("unfinished")) {
             return getUnfinishedJobs();
         } else {
             logger.warn("JobTracker.searchByState. Invalid search state param {}, returning empty set", state);
@@ -88,7 +87,7 @@ public class JobTracker {
         }
     }
 
-    private Set<FamousPeopleJobDto> getUnfinishedJobs(){
+    private Set<FamousPeopleJobDto> getUnfinishedJobs() {
         logger.info("JobTracker.getUnfinishedJobs");
         Set<FamousPeopleJobDto> unfinishedJobs = new HashSet<>();
         jobs.forEachValue(Long.MAX_VALUE, job -> {
@@ -105,7 +104,7 @@ public class JobTracker {
         FamousPeopleJob famousPeopleJob = jobs.get(url);
         Set<FamousPeopleJobDto> jobs = new HashSet<>();
 
-        if(famousPeopleJob != null) {
+        if (famousPeopleJob != null) {
             jobs.add(famousPeopleJob.toDto());
         }
 

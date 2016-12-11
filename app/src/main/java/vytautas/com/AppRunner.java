@@ -15,7 +15,6 @@ import java.io.IOException;
 @ComponentScan({"vytautas.com.config", "vytautas.com.services", "vytautas.com.controllers"})
 public class AppRunner {
 
-
     public static void main(String[] args) throws IOException {
         SpringApplication.run(AppRunner.class);
 

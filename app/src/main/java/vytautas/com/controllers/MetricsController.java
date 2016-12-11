@@ -17,7 +17,6 @@ public class MetricsController {
     @Autowired
     private MetricsService metricsService;
 
-
     @ApiOperation(
             nickname = "getCustomMetrics",
             value = "Returns a json object of site metrics",

@@ -26,7 +26,6 @@ public class CrawlerRunner {
         String url4 = "http:/www.example.com/4";
         String url5 = "http:/www.example.com/5";
 
-
         createJob(url1);
         updateJob(url1, "Philip Seymour Hoffman", "Matthew McConaughey");
         createJob(url2);
@@ -56,7 +55,7 @@ public class CrawlerRunner {
         client.newCall(createJobRequest).execute();
     }
 
-    private void updateJob(String url, String...famousPeople) throws IOException {
+    private void updateJob(String url, String... famousPeople) throws IOException {
         UpdateListRequest updateListRequest = new UpdateListRequest(url);
         updateListRequest.setList(Arrays.asList(famousPeople));
         Request createJobRequest = new Request.Builder()
