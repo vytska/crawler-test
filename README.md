@@ -19,4 +19,4 @@ Famous people job management endpoint has the main functionality. For API detail
 
 The health status, uptime and metrics can be checked at [http://localhost:8755/custom-metrics](http://localhost:8755/custom-metrics)
 it also includes durations and counts of API method calls. Additionally call durations are logged to console. 
-The default metric and health calls are still available at [/metrics](http://localhost:8755/metrics) and [/health](http://localhost:8755/metrics)
+The default metric and health calls are still available at [/metrics](http://localhost:8755/metrics) and [/health](http://localhost:8755/health)
