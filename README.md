@@ -1,5 +1,8 @@
 ## crawler-test
 A practice app. A REST API for crawler write-ahead-log. Crawlers search pages for famous people and report their findings to this service.
+
+**There are two versions.** One version is with more user friendly API, but not following RESTful paradigm (master branch). 
+And another, with RESTful implementation but crawlers must encode URL parameters (restful branch).     
 #### Prerequisites
 [Docker](https://www.docker.com/)
 
