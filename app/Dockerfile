@@ -6,7 +6,7 @@ WORKDIR /app
 
 CMD mvn clean install
 
-CMD mvn -X clean install exec:java -Dexec.mainClass="vytautas.com.RunApp" -Dexec.classpathScope=test -e
+CMD mvn spring-boot:run
 
 
 

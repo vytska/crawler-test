@@ -48,12 +48,13 @@ public class FamousPeopleJobController {
     @ApiOperation(
             nickname = "updateJobList",
             value = "Appends to job famous people list",
-            notes = "Multiple calls to this appends additional people to the existing list.")
+            notes = "Multiple calls to this appends additional people to the existing list. Empty list is acceptable")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Job successfully updated"),
             @ApiResponse(code = 404, message = "Job with this URL was not found"),
             @ApiResponse(code = 422, message = "Job with this URL is already done"),
-            @ApiResponse(code = 400, message = "URL was not present in the request") })
+            @ApiResponse(code = 400, message = "URL was not present in the request"),
+            @ApiResponse(code = 400, message = "Famous people job list is required")})
     @RequestMapping(path = "/famous-people-job/list", method = RequestMethod.PUT)
     @ExecutionMetric(value = "famous-people-job-update", loglevel = LogLevel.INFO)
     public void updateJobList(@RequestBody UpdateListRequest updateList) {

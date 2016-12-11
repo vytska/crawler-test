@@ -18,15 +18,18 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.hasKey;
 import static org.junit.Assert.*;
 import static org.hamcrest.core.Is.*;
 
-public class FamousPeopleJobsCrawlerApiTests {
+public class ApiTests {
 
     private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
@@ -172,6 +175,34 @@ public class FamousPeopleJobsCrawlerApiTests {
                 .build();
 
         return client.newCall(createJobRequest).execute();
+    }
+
+    @Test
+    public void testFamousPeopleListGetsAppended() throws IOException {
+        String url = "http://something.com?param=value";
+        createJob(url);
+
+        UpdateListRequest updateListRequest = new UpdateListRequest(url);
+        List<String> famousPeople = new ArrayList<>();
+        famousPeople.add("Philip Seymour Hoffman");
+        famousPeople.add("Matthew McConaughey");
+
+        updateListRequest.setList(famousPeople);
+        makePutCall(famousPeopleJobPath + "/list", updateListRequest);
+
+        List<String> additionalFamousPeople = new ArrayList<>();
+        additionalFamousPeople.add("dramatic hamster");
+        additionalFamousPeople.add("Santa");
+        famousPeople.addAll(additionalFamousPeople);
+
+        updateListRequest.setList(additionalFamousPeople);
+        Response updateResp = makePutCall(famousPeopleJobPath + "/list", updateListRequest);
+        assertThat(updateResp.code(), is(HttpStatus.OK.value()));
+
+        FamousPeopleJobDto job = searchParticularJob(url);
+
+        assertThat(job.getUrl(), is(url));
+        assertThat(job.getFamousPeople(), contains(famousPeople.toArray()));
     }
 
     /**
@@ -337,6 +368,48 @@ public class FamousPeopleJobsCrawlerApiTests {
 
         Response response = client.newCall(findJobRequest).execute();
         return mapper.readValue(response.body().string(), new TypeReference<List<FamousPeopleJobDto>>() {});
+    }
+
+    /**
+     * Specification (3) a
+     * An URL path to check the service uptime and health
+     * Specification (3) c
+     * Metrics for durations and invocation counts for business calls, dumped to console or separate file.
+     * (Implementation alteration - instead of file the data is exposed through rest as well)
+     */
+    @Test
+    public void testMetrics() throws IOException {
+        createJob("something");
+        searchUnfinishedJobs();
+
+        Request metricsRequest = new Request.Builder()
+                .url(hostname + "custom-metrics")
+                .get().build();
+
+        Response response = client.newCall(metricsRequest).execute();
+
+        Map<String, Object> metrics = mapper.readValue(response.body().string(), new TypeReference<Map<String, Object>>() {});
+
+        assertThat(metrics, hasKey("gauge.famous-people-job-create.max"));
+        assertThat(metrics, hasKey("gauge.famous-people-job-create.min"));
+        assertThat(metrics, hasKey("gauge.famous-people-job-create.average"));
+        assertThat(metrics, hasKey("gauge.famous-people-job-create.last"));
+
+        assertThat(metrics, hasKey("gauge.famous-people-job-search.max"));
+        assertThat(metrics, hasKey("gauge.famous-people-job-search.min"));
+        assertThat(metrics, hasKey("gauge.famous-people-job-search.average"));
+        assertThat(metrics, hasKey("gauge.famous-people-job-search.last"));
+        assertThat(metrics, hasKey("counter.famous-people-job-create"));
+        assertThat(metrics, hasKey("counter.famous-people-job-search"));
+
+        assertThat(metrics, hasKey("uptime"));
+
+
+
+        Map<String, Object> health = (Map<String, Object>)metrics.get("health");
+        assertThat(health.size(), is(1));
+        assertThat(health, hasEntry("status", "UP"));
+
     }
 
 }

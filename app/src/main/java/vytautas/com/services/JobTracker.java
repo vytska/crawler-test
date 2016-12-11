@@ -9,17 +9,14 @@ import vytautas.com.dtos.FamousPeopleJobDto;
 import vytautas.com.dtos.FinishJobRequest;
 import vytautas.com.dtos.UpdateListRequest;
 import vytautas.com.dtos.UrlHolder;
-import vytautas.com.exceptions.JobAlreadyExistsWarning;
-import vytautas.com.exceptions.JobAlreadyFinishedException;
-import vytautas.com.exceptions.JobNotFoundException;
-import vytautas.com.exceptions.UrlRequiredException;
+import vytautas.com.exceptions.*;
 
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Service(value = "jobTracker")
+@Service
 public class JobTracker {
 
     private static Logger logger = LoggerFactory.getLogger(JobTracker.class);
@@ -42,7 +39,12 @@ public class JobTracker {
 
     public void updateJob(UpdateListRequest updateListRequest) {
         FamousPeopleJob job = getJobAndValidate(updateListRequest);
-        logger.warn("JobTracker.updateJob. Adding famous people for job with URL: {}", updateListRequest.getUrl());
+        if(updateListRequest.getList().isEmpty()) {
+            logger.warn("JobTracker.updateJob. Empty famous people list came for URL: {}, request rejected", job.getUrl());
+            throw new ListRequiredException();
+        }
+
+        logger.info("JobTracker.updateJob. Adding famous people for job with URL: {}", updateListRequest.getUrl());
         job.addFamousPeople(updateListRequest.getList());
     }
 
