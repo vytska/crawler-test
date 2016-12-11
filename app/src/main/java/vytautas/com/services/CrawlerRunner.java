@@ -7,6 +7,8 @@ import vytautas.com.dtos.FinishJobRequest;
 import vytautas.com.dtos.UpdateListRequest;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.Arrays;
 
 public class CrawlerRunner {
@@ -16,8 +18,6 @@ public class CrawlerRunner {
     private OkHttpClient client = new OkHttpClient();
 
     private ObjectMapper mapper = new ObjectMapper();
-
-    private String apiPath = "http://localhost:8080/famous-people-job";
 
     public void runFiveCrawlers() throws IOException {
         String url1 = "http:/www.example.com/1";
@@ -46,35 +46,51 @@ public class CrawlerRunner {
         updateJob(url2, "Barack Obama", "Angela Merkel");
     }
 
-    private void createJob(String url) throws IOException {
-        CreateJobRequest createJob = new CreateJobRequest(url);
+    private void createJob(String jobUrl) throws IOException {
+        CreateJobRequest createJob = new CreateJobRequest(encodeUrl(jobUrl));
         Request createJobRequest = new Request.Builder()
-                .url(apiPath)
+                .url("http://localhost:8080/famous-people-jobs")
                 .post(RequestBody.create(JSON, mapper.writeValueAsString(createJob)))
                 .build();
 
         client.newCall(createJobRequest).execute();
     }
 
-    private void updateJob(String url, String...famousPeople) throws IOException {
-        UpdateListRequest updateListRequest = new UpdateListRequest(url);
-        updateListRequest.setList(Arrays.asList(famousPeople));
-        Request createJobRequest = new Request.Builder()
-                .url(apiPath + "/list")
-                .put(RequestBody.create(JSON, mapper.writeValueAsString(updateListRequest)))
-                .build();
-
-        client.newCall(createJobRequest).execute();
+    private String encodeUrl(String url) throws UnsupportedEncodingException {
+        return URLEncoder.encode(url, "UTF-8");
     }
 
-    private void finishJob(String url, String repositoryKey) throws IOException {
-        FinishJobRequest finishJobRequest = new FinishJobRequest(url, repositoryKey);
+    private Response updateJob(String jobUrl, String...famousPeople) throws IOException {
+        UpdateListRequest updateListRequest = new UpdateListRequest(Arrays.asList(famousPeople));
+        Request createJobRequest = new Request.Builder()
+                .url(buildUrl(jobUrl, "append"))
+                .patch(RequestBody.create(JSON, mapper.writeValueAsString(updateListRequest)))
+                .build();
+
+        return client.newCall(createJobRequest).execute();
+    }
+
+    private HttpUrl buildUrl(String jobUrl, String additionalSegment) throws UnsupportedEncodingException {
+        return new HttpUrl.Builder()
+                .scheme("http")
+                .host("localhost")
+                .port(8080)
+                .addPathSegment("famous-people-jobs")
+                .addPathSegment(encodeUrl(jobUrl))
+                .addPathSegment(additionalSegment)
+                .build();
+    }
+
+    private void finishJob(String jobUrl, String repositoryKey) throws IOException {
+        FinishJobRequest finishJobRequest = new FinishJobRequest(repositoryKey);
 
         Request createJobRequest = new Request.Builder()
-                .url(apiPath)
+                .url(buildUrl(jobUrl, "finish"))
                 .patch(RequestBody.create(JSON, mapper.writeValueAsString(finishJobRequest)))
                 .build();
 
         client.newCall(createJobRequest).execute();
     }
+
+
 }

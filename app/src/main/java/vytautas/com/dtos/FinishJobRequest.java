@@ -1,15 +1,14 @@
 package vytautas.com.dtos;
 
-public class FinishJobRequest extends UrlHolder {
+public class FinishJobRequest {
+
+    private String repositoryKey;
 
     public FinishJobRequest(){}
 
-    public FinishJobRequest(String url, String repositoryKey) {
-        super(url);
+    public FinishJobRequest(String repositoryKey) {
         this.repositoryKey = repositoryKey;
     }
-
-    private String repositoryKey;
 
     public String getRepositoryKey() {
         return repositoryKey;

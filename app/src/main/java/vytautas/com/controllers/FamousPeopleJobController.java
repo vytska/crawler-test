@@ -32,15 +32,15 @@ public class FamousPeopleJobController {
     @ApiOperation(
             nickname = "crateJob",
             value = "Creates new famous people job",
-            notes = "This call is used to start a job. URL is used as ID, it is case sensitive and not validated.<br/>" +
+            notes = "This call is used to start a job. URL is used as ID, <b>it must be encoded<b/>.<br/>" +
                     "Only one job per URL is permitted.")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Job successfully added"),
             @ApiResponse(code = 208, message = "Job with this URL is already started"),
             @ApiResponse(code = 422, message = "Job with this URL is already done"),
             @ApiResponse(code = 400, message = "URL was not present in the request")})
-    @RequestMapping(path = "/famous-people-job", method = RequestMethod.POST)
-    @ExecutionMetric(value = "famous-people-job-create", loglevel = LogLevel.INFO)
+    @RequestMapping(path = "/famous-people-jobs", method = RequestMethod.POST)
+    @ExecutionMetric(value = "famous-people-jobs-create", loglevel = LogLevel.INFO)
     public void crateJob(@RequestBody CreateJobRequest createJob) {
         jobTracker.addJob(createJob.getUrl());
     }
@@ -55,10 +55,10 @@ public class FamousPeopleJobController {
             @ApiResponse(code = 422, message = "Job with this URL is already done"),
             @ApiResponse(code = 400, message = "URL was not present in the request"),
             @ApiResponse(code = 400, message = "Famous people job list is required")})
-    @RequestMapping(path = "/famous-people-job/list", method = RequestMethod.PUT)
-    @ExecutionMetric(value = "famous-people-job-update", loglevel = LogLevel.INFO)
-    public void updateJobList(@RequestBody UpdateListRequest updateList) {
-        jobTracker.updateJob(updateList);
+    @RequestMapping(path = "/famous-people-jobs/{url}/append", method = RequestMethod.PATCH)
+    @ExecutionMetric(value = "famous-people-jobs-update", loglevel = LogLevel.INFO)
+    public void updateJobList(@PathVariable("url") String url, @RequestBody UpdateListRequest updateList) {
+        jobTracker.updateJob(url, updateList.getList());
     }
 
     @ApiOperation(
@@ -70,10 +70,10 @@ public class FamousPeopleJobController {
             @ApiResponse(code = 404, message = "Job with this URL was not found"),
             @ApiResponse(code = 422, message = "Job with this URL is already done"),
             @ApiResponse(code = 400, message = "URL was not present in the request") })
-    @RequestMapping(path = "/famous-people-job", method = RequestMethod.PATCH)
-    @ExecutionMetric(value="famous-people-job-finish", loglevel = LogLevel.INFO)
-    public void finishJob(@RequestBody FinishJobRequest finishJobRequestReq) {
-        jobTracker.finishJob(finishJobRequestReq);
+    @RequestMapping(path = "/famous-people-jobs/{url}/finish", method = RequestMethod.PATCH)
+    @ExecutionMetric(value="famous-people-jobs-finish", loglevel = LogLevel.INFO)
+    public void finishJob(@PathVariable("url") String url, @RequestBody FinishJobRequest finishJobRequestReq) {
+        jobTracker.finishJob(url, finishJobRequestReq.getRepositoryKey());
     }
 
     @ApiOperation(
@@ -84,8 +84,8 @@ public class FamousPeopleJobController {
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Request successful", response = FamousPeopleJobDto[].class),
             @ApiResponse(code = 400, message = "URL was not present in the request") })
-    @RequestMapping(path = "/famous-people-job", method = RequestMethod.GET, produces = "application/json")
-    @ExecutionMetric(value = "famous-people-job-search", loglevel = LogLevel.INFO)
+    @RequestMapping(path = "/famous-people-jobs", method = RequestMethod.GET, produces = "application/json")
+    @ExecutionMetric(value = "famous-people-jobs-search", loglevel = LogLevel.INFO)
     public Set<FamousPeopleJobDto> searchJobs(@RequestParam(value = "url", required = false) String url, @RequestParam(value = "state", required = false) String state) {
         if (!StringUtils.isEmpty(url)) {
             return jobTracker.searchByUrl(url);

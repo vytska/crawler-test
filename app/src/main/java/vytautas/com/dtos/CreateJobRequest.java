@@ -1,11 +1,20 @@
 package vytautas.com.dtos;
 
-public class CreateJobRequest extends UrlHolder {
+public class CreateJobRequest {
 
-    public CreateJobRequest() {
-    }
+    private String url;
+
+    public CreateJobRequest(){}
 
     public CreateJobRequest(String url) {
-        super(url);
+        this.url = url;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
     }
 }

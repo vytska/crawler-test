@@ -15,19 +15,16 @@ import vytautas.com.dtos.UpdateListRequest;
 import vytautas.com.services.JobTracker;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.nullValue;
-import static org.hamcrest.Matchers.hasEntry;
-import static org.hamcrest.Matchers.hasKey;
-import static org.junit.Assert.*;
-import static org.hamcrest.core.Is.*;
+import static org.hamcrest.Matchers.*;
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertThat;
 
 public class ApiTests {
 
@@ -39,7 +36,7 @@ public class ApiTests {
 
     private String hostname = "http://localhost:8080/";
 
-    private String famousPeopleJobPath = "famous-people-job";
+    private String famousPeopleJobPath = "famous-people-jobs";
 
     private JobTracker jobTracker = new JobTracker();
 
@@ -60,15 +57,19 @@ public class ApiTests {
      */
     @Test
     public void testJobGetsCreated() throws IOException {
-        String url = "http://some-url.com";
-        createJob(url);
+        String jobUrl = encodeUrl("http://some-url.com");
+        createJob(jobUrl);
     }
 
-    private void createJob(String url) throws IOException {
-        CreateJobRequest createJob = new CreateJobRequest(url);
+    private String encodeUrl(String url) throws UnsupportedEncodingException {
+        return URLEncoder.encode(url, "UTF-8");
+    }
+
+    private void createJob(String jobUrl) throws IOException {
+        CreateJobRequest createJob = new CreateJobRequest(jobUrl);
         Response createResp = makePostCall(famousPeopleJobPath, createJob);
         assertThat(createResp.code(), is(HttpStatus.OK.value()));
-        checkJobAfterInitialCreation(url);
+        checkJobAfterInitialCreation(jobUrl);
     }
 
     private Response makePostCall(String path, Object body) throws IOException {
@@ -112,27 +113,27 @@ public class ApiTests {
      */
     @Test
     public void testSameUrlCreationThrowsError() throws IOException {
-        String url = "http://something.com?param=value";
-        createJob(url);
+        String jobUrl = encodeUrl("http://www.example.com?param=value");
+        createJob(jobUrl);
 
-        Response createResp2 = makePostCall(famousPeopleJobPath, new CreateJobRequest(url));
+        Response createResp2 = makePostCall(famousPeopleJobPath, new CreateJobRequest(jobUrl));
         assertThat(createResp2.code(), is(HttpStatus.ALREADY_REPORTED.value()));
 
-        checkJobAfterInitialCreation(url);
+        checkJobAfterInitialCreation(jobUrl);
     }
 
 
     @Test
     public void testJobGetsCreatedWithJson() throws IOException {
-        String url = "just string";//I thought of validating URL, but that would decrease flexibility
+        String jobUrl = encodeUrl("just string");
 
         CreateJobRequest createJob = new CreateJobRequest();
-        createJob.setUrl(url);
+        createJob.setUrl(jobUrl);
 
-        Response createResp = makePostCallWithJson(famousPeopleJobPath, "{\"url\": \"" + url + "\"}");
+        Response createResp = makePostCallWithJson(famousPeopleJobPath, "{\"url\": \"" + jobUrl + "\"}");
         assertThat(createResp.code(), is(HttpStatus.OK.value()));
 
-        checkJobAfterInitialCreation(url);
+        checkJobAfterInitialCreation(jobUrl);
     }
 
     @Test
@@ -147,61 +148,67 @@ public class ApiTests {
      */
     @Test
     public void testFamousPeopleListGetsSaved() throws IOException {
-        String url = "http://something.com?param=value";
-        createJob(url);
+        String jobUrl = encodeUrl("http://www.example.com?param=value");
+        createJob(jobUrl);
 
-        UpdateListRequest updateListRequest = new UpdateListRequest(url);
         List<String> famousPeople = new ArrayList<>();
         famousPeople.add("Philip Seymour Hoffman");
         famousPeople.add("Matthew McConaughey");
         famousPeople.add("That guy from Titanic");
 
-        updateListRequest.setList(famousPeople);
-
-        Response updateResp = makePutCall(famousPeopleJobPath + "/list", updateListRequest);
+        Response updateResp = makeUpdateJobCall(jobUrl, famousPeople);
         assertThat(updateResp.code(), is(HttpStatus.OK.value()));
 
-        FamousPeopleJobDto job = searchParticularJob(url);
+        FamousPeopleJobDto job = searchParticularJob(jobUrl);
 
-        assertThat(job.getUrl(), is(url));
+        assertThat(job.getUrl(), is(jobUrl));
         assertThat(job.getFamousPeople(), contains(famousPeople.toArray()));
     }
 
 
-    private Response makePutCall(String path, Object body) throws IOException {
+    private Response makeUpdateJobCall(String jobUrl, List<String> famousPeople) throws IOException {
+        UpdateListRequest updateListRequest = new UpdateListRequest(famousPeople);
         Request createJobRequest = new Request.Builder()
-                .url(hostname + path)
-                .put(RequestBody.create(JSON, mapper.writeValueAsString(body)))
+                .url(buildUrl(jobUrl, "append"))
+                .patch(RequestBody.create(JSON, mapper.writeValueAsString(updateListRequest)))
                 .build();
 
         return client.newCall(createJobRequest).execute();
     }
 
+    private HttpUrl buildUrl(String jobUrl, String additionalSegment) throws UnsupportedEncodingException {
+        return new HttpUrl.Builder()
+                .scheme("http")
+                .host("localhost")
+                .port(8080)
+                .addPathSegment(famousPeopleJobPath)
+                .addPathSegment(jobUrl)
+                .addPathSegment(additionalSegment)
+                .build();
+    }
+
     @Test
     public void testFamousPeopleListGetsAppended() throws IOException {
-        String url = "http://something.com?param=value";
-        createJob(url);
+        String jobUrl = encodeUrl("http://www.example.com?param=value");
+        createJob(jobUrl);
 
-        UpdateListRequest updateListRequest = new UpdateListRequest(url);
         List<String> famousPeople = new ArrayList<>();
         famousPeople.add("Philip Seymour Hoffman");
         famousPeople.add("Matthew McConaughey");
 
-        updateListRequest.setList(famousPeople);
-        makePutCall(famousPeopleJobPath + "/list", updateListRequest);
+        makeUpdateJobCall(jobUrl, famousPeople);
 
         List<String> additionalFamousPeople = new ArrayList<>();
         additionalFamousPeople.add("dramatic hamster");
         additionalFamousPeople.add("Santa");
         famousPeople.addAll(additionalFamousPeople);
 
-        updateListRequest.setList(additionalFamousPeople);
-        Response updateResp = makePutCall(famousPeopleJobPath + "/list", updateListRequest);
+        Response updateResp = makeUpdateJobCall(jobUrl, additionalFamousPeople);
         assertThat(updateResp.code(), is(HttpStatus.OK.value()));
 
-        FamousPeopleJobDto job = searchParticularJob(url);
+        FamousPeopleJobDto job = searchParticularJob(jobUrl);
 
-        assertThat(job.getUrl(), is(url));
+        assertThat(job.getUrl(), is(jobUrl));
         assertThat(job.getFamousPeople(), contains(famousPeople.toArray()));
     }
 
@@ -211,22 +218,11 @@ public class ApiTests {
      */
     @Test
     public void testFamousPeopleListUrlNotFoundException() throws IOException {
-        String url = "http://something.com?param=value";
-        createJob(url);
+        String jobUrl = encodeUrl("http://www.example.com?param=value");
+        createJob(jobUrl);
 
-        UpdateListRequest updateListRequest = new UpdateListRequest(url + "!");
-        Response updateResp = makePutCall(famousPeopleJobPath + "/list", updateListRequest);
+        Response updateResp = makeUpdateJobCall(jobUrl + "!", Collections.emptyList());
         assertThat(updateResp.code(), is(HttpStatus.NOT_FOUND.value()));
-    }
-
-    @Test
-    public void testFamousPeopleListUrlRequiredException() throws IOException {
-        String url = "http://something.com?param=value";
-        createJob(url);
-
-        UpdateListRequest updateListRequest = new UpdateListRequest();
-        Response updateResp = makePutCall(famousPeopleJobPath + "/list", updateListRequest);
-        assertThat(updateResp.code(), is(HttpStatus.BAD_REQUEST.value()));
     }
 
 
@@ -236,23 +232,24 @@ public class ApiTests {
      */
     @Test
     public void testRepositoryUriGetsSaved() throws IOException {
-        String url = "http://something.com?param=value";
+        String jobUrl = encodeUrl("http://www.example.com?param=value");
         String repositoryKey = "repKey";
-        createJob(url);
+        createJob(jobUrl);
 
-        FinishJobRequest finishJobRequest = new FinishJobRequest(url, repositoryKey);
 
-        Response updateResp = makePatchCall(famousPeopleJobPath, finishJobRequest);
+
+        Response updateResp = makeFinishJobCall(jobUrl, repositoryKey);
         assertThat(updateResp.code(), is(HttpStatus.OK.value()));
 
-        FamousPeopleJobDto job = searchParticularJob(url);
+        FamousPeopleJobDto job = searchParticularJob(jobUrl);
         assertThat(job.getRepositoryKey(), is(repositoryKey));
     }
 
-    private Response makePatchCall(String path, Object body) throws IOException {
+    private Response makeFinishJobCall(String jobUrl, String repositoryKey) throws IOException {
+        FinishJobRequest finishJobRequest = new FinishJobRequest(repositoryKey);
         Request createJobRequest = new Request.Builder()
-                .url(hostname + path)
-                .patch(RequestBody.create(JSON, mapper.writeValueAsString(body)))
+                .url(buildUrl(jobUrl, "finish"))
+                .patch(RequestBody.create(JSON, mapper.writeValueAsString(finishJobRequest)))
                 .build();
 
         return client.newCall(createJobRequest).execute();
@@ -264,13 +261,11 @@ public class ApiTests {
      */
     @Test
     public void testUrlNotFoundOnFinish() throws IOException {
-        String url = "http://something.com?param=value";
+        String jobUrl = encodeUrl("http://www.example.com?param=value");
         String repositoryKey = "repKey";
-        createJob(url);
+        createJob(jobUrl);
 
-        FinishJobRequest finishJobRequest = new FinishJobRequest(url + "!", repositoryKey);
-
-        Response updateResp = makePatchCall(famousPeopleJobPath, finishJobRequest);
+        Response updateResp = makeFinishJobCall(jobUrl + "1", repositoryKey);
         assertThat(updateResp.code(), is(HttpStatus.NOT_FOUND.value()));
     }
 
@@ -280,16 +275,17 @@ public class ApiTests {
      */
     @Test
     public void testAfterJobFinishesNoUpdatesAreAllowed() throws IOException {
-        String url = "http://something.com?param=value";
+        String jobUrl = encodeUrl("http://www.example.com?param=value");
         String repositoryKey = "repKey";
-        createJob(url);
+        createJob(jobUrl);
 
-        FinishJobRequest finishJobRequest = new FinishJobRequest(url, repositoryKey);
-        Response updateResp = makePatchCall(famousPeopleJobPath, finishJobRequest);
+        Response updateResp = makeFinishJobCall(jobUrl, repositoryKey);
         assertThat(updateResp.code(), is(HttpStatus.OK.value()));
 
-        UpdateListRequest updateListRequest = new UpdateListRequest(url);
-        Response listResp = makePutCall(famousPeopleJobPath + "/list", updateListRequest);
+        List<String> famousPeople = new ArrayList<>();
+        famousPeople.add("Some Guy");
+
+        Response listResp = makeUpdateJobCall(jobUrl, famousPeople);
         assertThat(listResp.code(), is(HttpStatus.UNPROCESSABLE_ENTITY.value()));
     }
 
@@ -299,28 +295,24 @@ public class ApiTests {
      */
     @Test
     public void testGetParticularJob() throws IOException {
-        String url = "http://something.com?param=value";
+        String jobUrl = encodeUrl("http://www.example.com?param=value");
         String repositoryKey = "repKey";
-        createJob(url);
+        createJob(jobUrl);
 
 
-        UpdateListRequest updateListRequest = new UpdateListRequest(url);
         List<String> famousPeople = new ArrayList<>();
         famousPeople.add("Philip Seymour Hoffman");
 
-        updateListRequest.setList(famousPeople);
-
-        Response updateResp = makePutCall(famousPeopleJobPath + "/list", updateListRequest);
+        Response updateResp = makeUpdateJobCall(jobUrl, famousPeople);
         assertThat(updateResp.code(), is(HttpStatus.OK.value()));
 
-        FinishJobRequest finishJobRequest = new FinishJobRequest(url, repositoryKey);
-        Response finishResp = makePatchCall(famousPeopleJobPath, finishJobRequest);
+        Response finishResp = makeFinishJobCall(jobUrl, repositoryKey);
         assertThat(finishResp.code(), is(HttpStatus.OK.value()));
 
 
-        FamousPeopleJobDto job = searchParticularJob(url);
+        FamousPeopleJobDto job = searchParticularJob(jobUrl);
 
-        assertThat(job.getUrl(), is(url));
+        assertThat(job.getUrl(), is(jobUrl));
         assertThat(job.getRepositoryKey(), is(repositoryKey));
         assertThat(job.getFamousPeople(), contains(famousPeople.toArray()));
     }
@@ -331,32 +323,28 @@ public class ApiTests {
      */
     @Test
     public void testUnfinishedJobsRetrieval() throws IOException {
-        String url1 = "http://something.com?param=value";
-        String url2 = "http://something.com?param=other value";
-        String url3 = "http://somethingelse.com";
+        String job1Url = encodeUrl("http://www.example.com?param=value");
+        String job2Url = encodeUrl("http://www.example.com?param=other value");
+        String job3Url = encodeUrl("http://exampleelse.com");
         String repositoryKey = "repKey";
-        createJob(url1);
-        createJob(url2);
-        createJob(url3);
+        createJob(job1Url);
+        createJob(job2Url);
+        createJob(job3Url);
 
 
-        UpdateListRequest updateListRequest = new UpdateListRequest(url1);
         List<String> famousPeople = new ArrayList<>();
         famousPeople.add("Philip Seymour Hoffman");
 
-        updateListRequest.setList(famousPeople);
-
-        Response updateResp = makePutCall(famousPeopleJobPath + "/list", updateListRequest);
+        Response updateResp = makeUpdateJobCall(job1Url, famousPeople);
         assertThat(updateResp.code(), is(HttpStatus.OK.value()));
 
-        FinishJobRequest finishJobRequest = new FinishJobRequest(url1, repositoryKey);
-        Response finishResp = makePatchCall(famousPeopleJobPath, finishJobRequest);
+        Response finishResp = makeFinishJobCall(job1Url, repositoryKey);
         assertThat(finishResp.code(), is(HttpStatus.OK.value()));
 
 
         List<FamousPeopleJobDto> jobs = searchUnfinishedJobs();
         assertThat(jobs.size(), is(2));
-        assertThat(jobs, containsInAnyOrder(hasProperty("url", is(url2)), hasProperty("url", is(url3))
+        assertThat(jobs, containsInAnyOrder(hasProperty("url", is(job2Url)), hasProperty("url", is(job3Url))
         ));
     }
 
@@ -379,7 +367,7 @@ public class ApiTests {
      */
     @Test
     public void testMetrics() throws IOException {
-        createJob("something");
+        createJob("example");
         searchUnfinishedJobs();
 
         Request metricsRequest = new Request.Builder()
@@ -390,17 +378,17 @@ public class ApiTests {
 
         Map<String, Object> metrics = mapper.readValue(response.body().string(), new TypeReference<Map<String, Object>>() {});
 
-        assertThat(metrics, hasKey("gauge.famous-people-job-create.max"));
-        assertThat(metrics, hasKey("gauge.famous-people-job-create.min"));
-        assertThat(metrics, hasKey("gauge.famous-people-job-create.average"));
-        assertThat(metrics, hasKey("gauge.famous-people-job-create.last"));
+        assertThat(metrics, hasKey("gauge.famous-people-jobs-create.max"));
+        assertThat(metrics, hasKey("gauge.famous-people-jobs-create.min"));
+        assertThat(metrics, hasKey("gauge.famous-people-jobs-create.average"));
+        assertThat(metrics, hasKey("gauge.famous-people-jobs-create.last"));
 
-        assertThat(metrics, hasKey("gauge.famous-people-job-search.max"));
-        assertThat(metrics, hasKey("gauge.famous-people-job-search.min"));
-        assertThat(metrics, hasKey("gauge.famous-people-job-search.average"));
-        assertThat(metrics, hasKey("gauge.famous-people-job-search.last"));
-        assertThat(metrics, hasKey("counter.famous-people-job-create"));
-        assertThat(metrics, hasKey("counter.famous-people-job-search"));
+        assertThat(metrics, hasKey("gauge.famous-people-jobs-search.max"));
+        assertThat(metrics, hasKey("gauge.famous-people-jobs-search.min"));
+        assertThat(metrics, hasKey("gauge.famous-people-jobs-search.average"));
+        assertThat(metrics, hasKey("gauge.famous-people-jobs-search.last"));
+        assertThat(metrics, hasKey("counter.famous-people-jobs-create"));
+        assertThat(metrics, hasKey("counter.famous-people-jobs-search"));
 
         assertThat(metrics, hasKey("uptime"));
 

@@ -4,15 +4,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import vytautas.com.entities.FamousPeopleJob;
 import vytautas.com.dtos.FamousPeopleJobDto;
-import vytautas.com.dtos.FinishJobRequest;
-import vytautas.com.dtos.UpdateListRequest;
-import vytautas.com.dtos.UrlHolder;
+import vytautas.com.entities.FamousPeopleJob;
 import vytautas.com.exceptions.*;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -37,29 +35,29 @@ public class JobTracker {
         jobs.put(url, famousPeopleJob);
     }
 
-    public void updateJob(UpdateListRequest updateListRequest) {
-        FamousPeopleJob job = getJobAndValidate(updateListRequest);
-        if(updateListRequest.getList().isEmpty()) {
-            logger.warn("JobTracker.updateJob. Empty famous people list came for URL: {}, request rejected", job.getUrl());
+    public void updateJob(String url, List<String> famousPeople) {
+        FamousPeopleJob job = getJobAndValidate(url);
+        if(famousPeople.isEmpty()) {
+            logger.warn("JobTracker.updateJob. Empty famous people list came for URL: {}, request rejected", url);
             throw new ListRequiredException();
         }
 
-        logger.info("JobTracker.updateJob. Adding famous people for job with URL: {}", updateListRequest.getUrl());
-        job.addFamousPeople(updateListRequest.getList());
+        logger.info("JobTracker.updateJob. Adding famous people for job with URL: {}", url);
+        job.addFamousPeople(famousPeople);
     }
 
-    private FamousPeopleJob getJobAndValidate(UrlHolder urlHolder) {
-        validateUrl(urlHolder.getUrl());
+    private FamousPeopleJob getJobAndValidate(String url) {
+        validateUrl(url);
 
-        FamousPeopleJob existingJob = jobs.get(urlHolder.getUrl());
+        FamousPeopleJob existingJob = jobs.get(url);
 
         if (existingJob == null) {
-            logger.warn("JobTracker.getJobAndValidate. Job for URL: {} was not found, request rejected", urlHolder.getUrl());
+            logger.warn("JobTracker.getJobAndValidate. Job for URL: {} was not found, request rejected", url);
             throw new JobNotFoundException();
         }
 
         if (existingJob.isFinished()) {
-            logger.warn("JobTracker.getJobAndValidate. Job for URL: {} is already finished, request rejected", urlHolder.getUrl());
+            logger.warn("JobTracker.getJobAndValidate. Job for URL: {} is already finished, request rejected", url);
             throw new JobAlreadyFinishedException();
         }
 
@@ -73,10 +71,10 @@ public class JobTracker {
         }
     }
 
-    public void finishJob(FinishJobRequest finishJobRequest) {
-        FamousPeopleJob existingJob = getJobAndValidate(finishJobRequest);
-        logger.info("JobTracker.finishJob. Finishing job for URL: {}", finishJobRequest.getUrl());
-        existingJob.setRepositoryKey(finishJobRequest.getRepositoryKey());
+    public void finishJob(String url, String repositoryKey) {
+        FamousPeopleJob existingJob = getJobAndValidate(url);
+        logger.info("JobTracker.finishJob. Finishing job for URL: {}", url);
+        existingJob.setRepositoryKey(repositoryKey);
     }
 
     public Set<FamousPeopleJobDto> searchByState(String state) {
