@@ -7,7 +7,6 @@ And another, with RESTful implementation but crawlers must encode URL parameters
 [Docker](https://www.docker.com/)
 
 [Docker Compose](https://docs.docker.com/compose/)
-#### Building
 
 #### Building and running
 The service uses port 8755, it can be changed in docker-compose.yml
